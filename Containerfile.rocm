@@ -1,0 +1,42 @@
+# syntax=docker/dockerfile:1
+#
+# iGPU baseline for the benchmarks: ONNX Runtime with the MIGraphX execution
+# provider, and Intel Open Image Denoise with its HIP device, on the Radeon
+# 890M (gfx1150) through AMD ROCm 7.2.4. Like the NPU image, it shares only the
+# GPU device nodes (/dev/kfd, /dev/dri/renderD*) with the host and uses the
+# host kernel's amdgpu driver; nothing is installed on the host.
+#
+#   podman build -f Containerfile.rocm -t ryzen-npu-rocm:7.2.4 .
+#
+# Versions (checked 2026-10-31):
+#   rocm/dev-ubuntu-24.04:7.2.4, built 2026-05-28 (gfx1150 is listed for ROCm 7.2)
+#   MIGraphX 2.15.0 from AMD's ROCm 7.2.4 apt repository
+#   onnxruntime-migraphx 1.23.2 from repo.radeon.com (rocm-rel-7.2.4)
+#   Open Image Denoise 2.5.1 (2026-08-18), Apache-2.0, whose HIP device ships gfx1150 kernels
+
+FROM docker.io/rocm/dev-ubuntu-24.04:7.2.4@sha256:bdc8e61026cbb844ede93d44d2c50055f51ebb2041906b60182bf3bee3139054
+
+LABEL ryzen-npu.build="1"
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends migraphx python3.12-venv \
+ && rm -rf /var/lib/apt/lists/*
+
+ARG ORT_WHEEL=https://repo.radeon.com/rocm/manylinux/rocm-rel-7.2.4/onnxruntime_migraphx-1.23.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+RUN python3.12 -m venv /opt/venv \
+ && /opt/venv/bin/pip install --no-cache-dir \
+      "numpy==2.5.3" "onnx==1.22.0" "pillow==13.0.0" \
+      "onnxruntime-migraphx @ ${ORT_WHEEL}#sha256=ee8edeb2ba6a8d99b3043b23e812423e6f10333b508e003fc77b0feda197449f"
+
+ADD --checksum=sha256:743c3e2aff8c220d5d70fe6cb970fb3d36f2702d2693c61d1d148e404cf37cd6 \
+    https://github.com/RenderKit/oidn/releases/download/v2.5.1/oidn-2.5.1.x86_64.linux.tar.gz /tmp/oidn.tar.gz
+RUN mkdir -p /opt/oidn \
+ && tar -xzf /tmp/oidn.tar.gz -C /opt/oidn --strip-components=1 --no-same-owner \
+ && rm /tmp/oidn.tar.gz
+
+ENV PATH=/opt/venv/bin:/opt/oidn/bin:${PATH} \
+    LD_LIBRARY_PATH=/opt/oidn/lib:/opt/rocm/lib
+WORKDIR /work
+CMD ["bash"]

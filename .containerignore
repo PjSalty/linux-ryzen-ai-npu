@@ -1,0 +1,7 @@
+# Only scripts/entrypoint.sh is copied into the image; keep big folders out of the context.
+.git/
+downloads/
+models/
+cache/
+data/
+results/

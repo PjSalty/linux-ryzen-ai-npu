@@ -1,0 +1,19 @@
+ryzen-npu
+Copyright 2026 the ryzen-npu contributors
+
+This product is licensed under the Apache License, Version 2.0 (LICENSE).
+
+It includes code adapted from Intel Open Image Denoise 2.5.1
+(https://github.com/RenderKit/oidn, training/), Copyright 2018 Intel
+Corporation, licensed under the Apache License, Version 2.0. See
+npubench/oidn_unet.py.
+
+npubench/vitisai_config_bf16.json follows the BF16 example configuration in
+AMD RyzenAI-SW (https://github.com/amd/RyzenAI-SW, CNN-examples/
+getting_started_resnet/bf16), Copyright Advanced Micro Devices, Inc.,
+licensed under the MIT License.
+
+AMD Ryzen AI Software, XRT and the amdxdna plugin are NOT included in this
+repository and are not covered by its license. scripts/fetch-amd.sh downloads
+them from AMD, and they are licensed to you by AMD under the AMD End User
+License Agreement: https://ryzenai.docs.amd.com/en/latest/licenses.html

@@ -1,0 +1,9 @@
+# AMD software is never committed: scripts/fetch-amd.sh downloads it.
+/downloads/
+# Exported models, compile caches and scratch data are rebuilt by the scripts.
+/models/
+/cache/
+/data/
+__pycache__/
+*.pyc
+/cache-scratch/
