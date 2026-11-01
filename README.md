@@ -95,8 +95,9 @@ with this repository's guard and prints its latency, power and the NPU busy
 counter; on the test machine it took 1.5 to 1.6 ms per run, with 398 of its
 400 nodes on the NPU and the NPU 86 to 87% busy.
 
-To remove everything the scripts created outside this folder (the image and
-its build layers), run `scripts/uninstall.sh`. Delete the folder yourself.
+To remove everything this repository created outside its folder (the NPU
+image, the iGPU baseline image if you built it, and their build layers), run
+`scripts/uninstall.sh`. Delete the folder yourself.
 
 ## Run your own model
 
@@ -305,15 +306,21 @@ sudo xrt-smi configure --pmode default             # back to the default
 ## Proof that the NPU ran
 
 When the Vitis AI execution provider fails to load, ONNX Runtime silently runs
-the whole model on the CPU. `npubench.bench` therefore refuses to report an NPU
-number unless:
+the whole model on the CPU. `npubench.bench` therefore checks two things on
+every NPU run:
 
-1. `VitisAIExecutionProvider` is in the session's providers, and
-2. the NPU busy counter in `gpu_metrics` averaged at least 1% over the timed
-   runs (`"npu_verified": true` in the JSON output).
+1. `VitisAIExecutionProvider` must be in the session's providers. If it is
+   not, the command stops before it times anything.
+2. The NPU busy counter in `gpu_metrics` must average at least 1% over the
+   timed runs. If it does not, the result is still written, with
+   `"npu_verified": false`, and the command exits with an error. If the
+   counter cannot be read, `npu_verified` is `null`.
 
 It also records how many graph nodes the NPU took (`npu_partition`, from the
-EP's report). iGPU runs have the same check on the GFX busy counter.
+EP's report). iGPU runs get the same two checks with the MIGraphX provider and
+the GFX busy counter, at 5%. The accuracy tools (`npubench.compare`,
+`npubench.oidn_check`) check only the provider, so run them on a model whose
+NPU run `npubench.bench` has verified.
 
 ## What the image changes, and why
 
@@ -404,7 +411,7 @@ and the same with `-d cpu -n 22`. The CPU and iGPU rows used `--device cpu
 | `Containerfile.rocm`, `scripts/run-igpu.sh` | The iGPU baseline image (ROCm, MIGraphX, OIDN with HIP) |
 | `scripts/fetch-amd.sh` | Downloads and verifies AMD's files |
 | `scripts/run.sh`, `scripts/entrypoint.sh` | Runs a command in the NPU container |
-| `scripts/uninstall.sh` | Removes the image and its build layers |
+| `scripts/uninstall.sh` | Removes the NPU and iGPU images and their build layers |
 | `npubench/bench.py` | Latency and power on the NPU, CPU or iGPU, with the NPU proof |
 | `npubench/power.py` | SoC power and busy counters from `gpu_metrics` |
 | `npubench/export.py` | ONNX exports of the three models, at pinned revisions |

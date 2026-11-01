@@ -1,5 +1,5 @@
 # Copyright 2018 Intel Corporation
-# Copyright 2026 the ryzen-npu contributors
+# Copyright 2026 the linux-ryzen-ai-npu contributors
 # SPDX-License-Identifier: Apache-2.0
 #
 # The UNet definition, the TZA reader, the PU transfer function and the
