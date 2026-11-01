@@ -126,6 +126,13 @@ def main() -> None:
     p.add_argument("--method", choices=["minmax", "percentile"], default="minmax")
     p.add_argument("--per-channel", action="store_true", help="per-channel weight scales")
     p.add_argument(
+        "--exclude",
+        nargs="*",
+        default=[],
+        metavar="NODE",
+        help="nodes to keep in float (e.g. /enc_conv0/Conv)",
+    )
+    p.add_argument(
         "--crop", type=int, nargs=2, metavar=("H", "W"), help="calibrate on H x W crops of each sample"
     )
     p.add_argument("--set-shape", type=int, nargs=2, metavar=("H", "W"), help="deployment input size")
@@ -146,6 +153,7 @@ def main() -> None:
         activation_type=act,
         weight_type=wgt,
         per_channel=args.per_channel,
+        nodes_to_exclude=args.exclude,
         calibrate_method=method,
         # Reduce ranges after every sample to bound memory.
         extra_options={
